@@ -1,6 +1,6 @@
 
-# Created by https://www.gitignore.io/api/c,git
-# Edit at https://www.gitignore.io/?templates=c,git
+# Created by https://www.gitignore.io/api/c,git,cmake
+# Edit at https://www.gitignore.io/?templates=c,git,cmake
 
 ### C ###
 # Prerequisites
@@ -56,6 +56,23 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
+### CMake ###
+CMakeLists.txt.user
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Testing
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps
+
+### CMake Patch ###
+# External projects
+*-prefix/
+
 ### Git ###
 # Created by git for backups. To disable backups in Git:
 # $ git config --global mergetool.keepBackup false
@@ -71,8 +88,7 @@ dkms.conf
 *_LOCAL_*.txt
 *_REMOTE_*.txt
 
-# End of https://www.gitignore.io/api/c,git
-
+# End of https://www.gitignore.io/api/c,git,cmake
 
 # Exclude Linux executable
 virus

@@ -1,0 +1,1 @@
+validate variable type (all) คิดจาก worse case
