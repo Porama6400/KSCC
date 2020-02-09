@@ -3,4 +3,5 @@ mkdir build
 if cd build; then
     cmake ..
     make
+    ./KSCC
 fi
