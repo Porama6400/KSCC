@@ -99,16 +99,16 @@ unsigned short checkNear(int sx1, int sy1, int sx2, int sy2, int px1, int py1, i
 
     // pxsr = xsr * xsr
     pxsr.d2 = xsr.d1 * xsr.d1;
-    pxsr.d1 += xsr.d1 * xsr.d0;
+    pxsr.d1 = xsr.d1 * xsr.d0;
     pxsr.d1 += xsr.d0 * xsr.d1;
-    pxsr.d0 += xsr.d0 * xsr.d0;
+    pxsr.d0 = xsr.d0 * xsr.d0;
 
     // pysr = ysr * ysr
 
     pysr.d2 = ysr.d1 * ysr.d1;
-    pysr.d1 += ysr.d1 * ysr.d0;
+    pysr.d1 = ysr.d1 * ysr.d0;
     pysr.d1 += ysr.d0 * ysr.d1;
-    pysr.d0 += ysr.d0 * ysr.d0;
+    pysr.d0 = ysr.d0 * ysr.d0;
 
     // sqrt( (xsr * xsr) + (ysr * ysr) ) <= 10
     // (xsr * xsr) + (ysr * ysr) <= 100
@@ -138,7 +138,11 @@ unsigned short checkNear(int sx1, int sy1, int sx2, int sy2, int px1, int py1, i
 
         max = (0 - ppxysr.d1 + sqrt(spp)) / (2 * ppxysr.d2);
 
-        return max >= 0 && min <= 1;
+//        return max >= 0 && min <= 1;
+
+        if (max >= 0 && min <= 1) {
+            return 1;
+        } else return 0;
 
     } else {
 //        printf("Error\n");
@@ -210,10 +214,17 @@ unsigned short run() {
 
             person->toX = person->x + movementTable[day][i].dx;
             person->toY = person->y + movementTable[day][i].dy;
+        }
 
-            #if DEBUG
-            printf("ID=%d moving from (%d,%d) to (%d,%d)\n",person->id,person->x,person->y,person->toX,person->toY);
-            #endif
+
+        for (int i = 0; i < numPeople; i++) {
+            Person *person = &people[i];
+            if (person->status == -1) continue;
+
+#if DEBUG
+            printf("ID=%d moving from (%d,%d) to (%d,%d)\n", person->id, person->x, person->y, person->toX,
+                   person->toY);
+#endif
 
             if (person->status > INFECTION_LENGTH) {
                 person->status = -1;
@@ -231,7 +242,7 @@ unsigned short run() {
                     if (checkNear(person->x, person->y, person->toX, person->toY,
                                   personB->x, personB->y, personB->toX, personB->toY)) {
                         personB->status = 1;
-                        printf("ID=%d infected ID=%d",person->id,personB->id);
+                        printf("ID=%d infected ID=%d\n", person->id, personB->id);
                     }
                 }
             }
