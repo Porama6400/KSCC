@@ -1,7 +1,3 @@
 #!/bin/bash
-mkdir build
-if cd build; then
-    cmake ..
-    make
-    ./KSCC
-fi
+gcc virus.c -o virus
+./virus
