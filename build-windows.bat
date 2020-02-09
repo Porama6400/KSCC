@@ -1,5 +1,7 @@
 @echo off
-gcc virus.c -o virus.exe
+:start
+cls
+gcc virus.c -fopenmp -o virus.exe
 virus.exe < virus.in
-rem virus.exe
 pause
+goto start

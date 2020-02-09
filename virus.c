@@ -1,16 +1,31 @@
 #include <stdio.h>
 #include <math.h>
+#include <omp.h>
 
 #define MAX_PEOPLE 1000
 #define MAX_DAY 1000
 #define INFECTION_LENGTH 16
 
-#define DEBUG 1
+#define DEBUG_LEVEL 1
+// 0 = OFF, 1 = INFO, 2 = VERBOSE
+
+#define TIME_REPORT 1
+// Benchmark time taken to calculate (not including stdin reading)
+// 0 = OFF, 1 = ON
+
+
+#if TIME_REPORT
+
+#include <time.h>
+
+struct timespec time_start;
+unsigned long time_run;
+#endif
 
 // Functions Prototype
 void parseInput();
 
-unsigned short run();
+unsigned short simulate();
 
 // Type declaration
 typedef struct {
@@ -34,21 +49,20 @@ typedef struct {
     int dy;
 } Movement;
 
-// Configuration
+typedef struct {
+    double d2;
+    double d1;
+    double d0;
+} Poly;
+
+
+// Config and Variables
 short numPeople = 0; //number of people in the simulation
 short daySimulated = 0; //day of infection
 
 Movement movementTable[MAX_DAY][MAX_PEOPLE];
 PersonInit peopleInitValue[MAX_PEOPLE];
 Person people[MAX_PEOPLE];
-
-unsigned short s = 0; // id of the guy that makes the city collapse
-
-typedef struct {
-    double d2;
-    double d1;
-    double d0;
-} Poly;
 
 unsigned short checkNear(int sx1, int sy1, int sx2, int sy2, int px1, int py1, int px2, int py2) {
     double min, max;
@@ -138,11 +152,7 @@ unsigned short checkNear(int sx1, int sy1, int sx2, int sy2, int px1, int py1, i
 
         max = (0 - ppxysr.d1 + sqrt(spp)) / (2 * ppxysr.d2);
 
-//        return max >= 0 && min <= 1;
-
-        if (max >= 0 && min <= 1) {
-            return 1;
-        } else return 0;
+        return max >= 0 && min <= 1;
 
     } else {
 //        printf("Error\n");
@@ -169,12 +179,13 @@ void parseInput() {
     }
 
     //debug input
-#if DEBUG
-    printf("total pep: \n");
-    printf("%hu \n", numPeople);
-    printf("all id: \n");
+#if DEBUG_LEVEL >= 1
+    printf("No. of people: %hu\n", numPeople);
+#endif
+#if DEBUG_LEVEL >= 2
+    printf("IDs: \n");
     for (short i = 0; i < numPeople; i++) {
-        printf("%hu \n", peopleInitValue[i].id);
+        printf("%hu\n", peopleInitValue[i].id);
     }
 #endif
 }
@@ -189,18 +200,8 @@ void init() {
     }
 }
 
-#if DEBUG
-int eachDayCounter = 0;
-#endif
-
-unsigned short run() {
+unsigned short simulate() {
     for (int day = 0; day < daySimulated; day++) {
-
-#if DEBUG
-        eachDayCounter = 0;
-#endif
-
-
         for (int i = 0; i < numPeople; i++) {
             Person *person = &people[i];
             if (person->status == -1) continue;
@@ -221,7 +222,7 @@ unsigned short run() {
             Person *person = &people[i];
             if (person->status == -1) continue;
 
-#if DEBUG
+#if DEBUG_LEVEL >= 2
             printf("ID=%d moving from (%d,%d) to (%d,%d)\n", person->id, person->x, person->y, person->toX,
                    person->toY);
 #endif
@@ -242,27 +243,29 @@ unsigned short run() {
                     if (checkNear(person->x, person->y, person->toX, person->toY,
                                   personB->x, personB->y, personB->toX, personB->toY)) {
                         personB->status = 1;
+#if DEBUG_LEVEL >= 2
                         printf("ID=%d infected ID=%d\n", person->id, personB->id);
+#endif
                     }
                 }
             }
         }
 
 
-#if DEBUG
+#if DEBUG_LEVEL >= 2
+        register unsigned short todayCounter = 0;
         for (int i = 0; i < numPeople; i++) {
             if (people[i].status != 0) {
-                eachDayCounter++;
+                todayCounter++;
             }
         }
 
         printf("Day %d ended\n", day);
-        printf("Infected today: %d \n", eachDayCounter);
+        printf("Infected today: %d \n", todayCounter);
 #endif
     }
 
     unsigned short counter = 0;
-
     for (int i = 0; i < numPeople; i++) {
         if (people[i].status != 0) {
             counter++;
@@ -272,17 +275,57 @@ unsigned short run() {
     return counter;
 }
 
-
-// Code entry point
-int main() {
+void run() {
     parseInput();
+
+#if TIME_REPORT
+    clock_gettime(CLOCK_REALTIME, &time_start);
+#endif
+
+    unsigned short maxInfection = 0;
+    unsigned short maxInfectionId = 0;
+#pragma omp for
     for (int i = 0; i < numPeople; i++) {
         init();
         people[i].status = 1;
-        unsigned short infected = run();
+        unsigned short infected = simulate();
+#pragma omp critical
+        if (infected > maxInfection) {
+            maxInfection = infected;
+            maxInfectionId = people[i].id;
+        }
 
-#if DEBUG
+#if DEBUG_LEVEL >= 1
         printf("Starting with id=%d will infect %d people\n", people[i].id, infected);
 #endif
     }
+
+    printf("%d\n", maxInfectionId);
+
+#if TIME_REPORT
+    struct timespec time_end;
+    clock_gettime(CLOCK_REALTIME, &time_end);
+    time_run =
+            ((time_end.tv_sec - time_start.tv_sec) * (long) 1e9 + (time_end.tv_nsec - time_start.tv_nsec)) / 1000;
+    printf("Program finished in %0.2f ms\n", time_run / 1000.0);
+#endif
 }
+
+int main() {
+        run();
+}
+
+/*#pragma omp parallel
+int main() {
+    const int iterations = 300;
+    unsigned long time_avr = 0;
+    for (int i = 0; i < iterations; i++) {
+#pragma omp single nowait
+        run();
+        time_avr += time_run;
+    }
+
+    time_avr /= iterations;
+    printf("Average: %0.2f ms\n", time_run / 1000.0);
+    return 0;
+}*/
