@@ -1,5 +1,5 @@
 @echo off
 gcc virus.c -o virus.exe
-virus.exe < testdata.txt
+virus.exe < virus.in
 rem virus.exe
 pause

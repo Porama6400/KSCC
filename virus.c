@@ -3,24 +3,30 @@
 
 #define MAX_PEOPLE 1000
 #define MAX_DAY 1000
+#define INFECTION_LENGTH 16
 
 #define DEBUG 1
-#define INFECTION_LENGTH 16
 
 // Functions Prototype
 void parseInput();
 
-void run();
+unsigned short run();
 
 // Type declaration
 typedef struct {
     unsigned short id;
     int x;
     int y;
-    int tox;
-    int toy;
+    int toX;
+    int toY;
     short status; // 0 = normal, 1 - 16 = infected, -1 = died lol
 } Person;
+
+typedef struct {
+    unsigned short id;
+    int x;
+    int y;
+} PersonInit;
 
 typedef struct {
     unsigned short id;
@@ -31,14 +37,9 @@ typedef struct {
 // Configuration
 short numPeople = 0; //number of people in the simulation
 short daySimulated = 0; //day of infection
-unsigned short id[MAX_PEOPLE];
-
-unsigned short corX[MAX_PEOPLE]; //initial cordinate x;
-unsigned short corY[MAX_PEOPLE]; //initial cordinate y;
-unsigned short currentCorX[MAX_PEOPLE]; //s cordinate x;
-unsigned short currentCorY[MAX_PEOPLE]; //initial cordinate y;
 
 Movement movementTable[MAX_DAY][MAX_PEOPLE];
+PersonInit peopleInitValue[MAX_PEOPLE];
 Person people[MAX_PEOPLE];
 
 unsigned short s = 0; // id of the guy that makes the city collapse
@@ -151,11 +152,9 @@ void parseInput() {
     int p = 0;
     int q = 0;
     for (short i = 0; i < numPeople; i++) {
-
-        scanf("%hu", &(people[i].id)); //scan id
-        scanf("%d", &(people[i].x)); //scan initial x
-        scanf("%d", &(people[i].y)); //scan initial y
-        people[i].status = 0;
+        scanf("%hu", &(peopleInitValue[i].id)); //scan id
+        scanf("%d", &(peopleInitValue[i].x)); //scan initial x
+        scanf("%d", &(peopleInitValue[i].y)); //scan initial y
     }
     scanf("%hu", &daySimulated);
     for (short date = 0; date < daySimulated; date++) {
@@ -170,17 +169,31 @@ void parseInput() {
     printf("total pep: \n");
     printf("%hu \n", numPeople);
     printf("all id: \n");
-    for (short i = 0; i <= numPeople; i++) {
-        printf("%hu \n", id[i]);
+    for (short i = 0; i < numPeople; i++) {
+        printf("%hu \n", peopleInitValue[i].id);
     }
 #endif
 }
 
-void run() {
+void init() {
+    for (int i = 0; i < numPeople; i++) {
+        Person *person = &people[i];
+        person->x = peopleInitValue[i].x;
+        person->y = peopleInitValue[i].y;
+        person->id = peopleInitValue[i].id;
+        person->status = 0;
+    }
+}
+
+#if DEBUG
+int eachDayCounter = 0;
+#endif
+
+unsigned short run() {
     for (int day = 0; day < daySimulated; day++) {
 
 #if DEBUG
-        printf("Day %d started", day);
+        eachDayCounter = 0;
 #endif
 
 
@@ -189,14 +202,19 @@ void run() {
             if (person->status == -1) continue;
 
             if (day > 0) {
-                person->x = person->tox;
-                person->y = person->toy;
+                person->x = person->toX;
+                person->y = person->toY;
+
+                if (person->status > 0) person->status++;
             }
 
-            person->tox = person->x + movementTable[day][i].dx;
-            person->toy = person->y + movementTable[day][i].dy;
+            person->toX = person->x + movementTable[day][i].dx;
+            person->toY = person->y + movementTable[day][i].dy;
 
-            if (person->status > 0) person->status++;
+            #if DEBUG
+            printf("ID=%d moving from (%d,%d) to (%d,%d)\n",person->id,person->x,person->y,person->toX,person->toY);
+            #endif
+
             if (person->status > INFECTION_LENGTH) {
                 person->status = -1;
             }
@@ -210,9 +228,10 @@ void run() {
                     Person *personB = &people[j];
                     if (personB->status > 0) continue;
 
-                    if (checkNear(person->x, person->y, person->tox, person->toy,
-                                  personB->x, personB->y, personB->tox, personB->toy)) {
+                    if (checkNear(person->x, person->y, person->toX, person->toY,
+                                  personB->x, personB->y, personB->toX, personB->toY)) {
                         personB->status = 1;
+                        printf("ID=%d infected ID=%d",person->id,personB->id);
                     }
                 }
             }
@@ -220,17 +239,39 @@ void run() {
 
 
 #if DEBUG
-        printf("Day %d ended", day);
+        for (int i = 0; i < numPeople; i++) {
+            if (people[i].status != 0) {
+                eachDayCounter++;
+            }
+        }
+
+        printf("Day %d ended\n", day);
+        printf("Infected today: %d \n", eachDayCounter);
 #endif
     }
+
+    unsigned short counter = 0;
+
+    for (int i = 0; i < numPeople; i++) {
+        if (people[i].status != 0) {
+            counter++;
+        }
+    }
+
+    return counter;
 }
 
 
 // Code entry point
 int main() {
     parseInput();
-    run();
-//    for (short validatePep = 0; validatePep > daySimulated; validatePep++) {
-//        for (short otherPep = 0; otherPep > numPeople; otherPep++)
-//    }
+    for (int i = 0; i < numPeople; i++) {
+        init();
+        people[i].status = 1;
+        unsigned short infected = run();
+
+#if DEBUG
+        printf("Starting with id=%d will infect %d people\n", people[i].id, infected);
+#endif
+    }
 }
