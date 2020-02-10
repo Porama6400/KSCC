@@ -3,7 +3,7 @@
 #include <omp.h>
 
 #define MAX_PEOPLE 5000
-#define PEOPLE_ID_SIZE 10001
+#define PEOPLE_ID_LUT_SIZE 10001
 #define MAX_DAY 1000
 #define INFECTION_LENGTH 15
 
@@ -56,7 +56,7 @@ short daySimulated = 0; //day of infection
 Movement movementTable[MAX_DAY][MAX_PEOPLE];
 PersonInit peopleInitValue[MAX_PEOPLE];
 Person people[MAX_PEOPLE];
-unsigned short idTable[PEOPLE_ID_SIZE];
+unsigned short idTable[PEOPLE_ID_LUT_SIZE];
 unsigned short peopleInfectiousValue[MAX_PEOPLE];
 
 
@@ -103,7 +103,7 @@ void parseInput() {
         scanf("%d", &(peopleInitValue[i].y)); //scan initial y
     }
 
-    for (int i = 0; i < 10001; i++) {
+    for (int i = 0; i < PEOPLE_ID_LUT_SIZE; i++) {
         idTable[i] = 0;
     }
     for (int i = 0; i < numPeople; i++) {
