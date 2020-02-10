@@ -15,7 +15,9 @@
 // 0 = OFF, 1 = ON
 
 #if TIME_REPORT
+
 #include <time.h>
+
 struct timespec time_start;
 unsigned long time_run;
 #endif
@@ -55,6 +57,7 @@ Movement movementTable[MAX_DAY][MAX_PEOPLE];
 PersonInit peopleInitValue[MAX_PEOPLE];
 Person people[MAX_PEOPLE];
 unsigned short idTable[PEOPLE_ID_SIZE];
+unsigned short peopleInfectiousValue[MAX_PEOPLE];
 
 
 unsigned short checkNear(int sx1, int sy1, int sx2, int sy2, int px1, int py1, int px2, int py2) {
@@ -134,9 +137,9 @@ void parseInput() {
 #endif
 }
 
-void init() {
+void init(Person localPeople[]) {
     for (int i = 0; i < numPeople; i++) {
-        Person *person = &people[i];
+        Person *person = &localPeople[i];
         person->x = peopleInitValue[i].x;
         person->y = peopleInitValue[i].y;
         person->id = peopleInitValue[i].id;
@@ -144,10 +147,10 @@ void init() {
     }
 }
 
-unsigned short simulate() {
+unsigned short simulate(Person localPeople[]) {
     for (int day = 0; day < daySimulated; day++) {
         for (int i = 0; i < numPeople; i++) {
-            Person *person = &people[i];
+            Person *person = &localPeople[i];
             if (person->status == -1) continue;
 
             if (day > 0) {
@@ -168,7 +171,7 @@ unsigned short simulate() {
 
 
         for (int i = 0; i < numPeople; i++) {
-            Person *person = &people[i];
+            Person *person = &localPeople[i];
             if (person->status == -1) continue;
 
             if (person->status > INFECTION_LENGTH) {
@@ -181,7 +184,7 @@ unsigned short simulate() {
                 for (int j = 0; j < numPeople; j++) {
                     if (j == i) continue;
 
-                    Person *personB = &people[j];
+                    Person *personB = &localPeople[j];
                     if (personB->status != 0) continue;
 
                     if (checkNear(person->x, person->y, person->toX, person->toY,
@@ -199,7 +202,7 @@ unsigned short simulate() {
 #if DEBUG_LEVEL >= 2
         register unsigned short todayCounter = 0;
         for (int i = 0; i < numPeople; i++) {
-            if (people[i].status != 0) {
+            if (localPeople[i].status != 0) {
                 todayCounter++;
             }
         }
@@ -211,7 +214,7 @@ unsigned short simulate() {
 
     unsigned short counter = 0;
     for (int i = 0; i < numPeople; i++) {
-        if (people[i].status != 0) {
+        if (localPeople[i].status != 0) {
             counter++;
         }
     }
@@ -226,22 +229,30 @@ void run() {
     clock_gettime(CLOCK_REALTIME, &time_start);
 #endif
 
-    unsigned short maxInfection = 0;
-    unsigned short maxInfectionId = 0;
-    unsigned short infectedCount = 0;
+#pragma omp parallel for private(people) schedule(dynamic)
     for (int i = 0; i < numPeople; i++) {
-        init();
+        init(&people[0]);
         people[i].status = 1;
-        infectedCount = simulate();
+        unsigned short infectedCount = simulate(&people[0]);
 
 #if DEBUG_LEVEL >= 1
         printf("Starting with id=%d will infect %d people\n", people[i].id, infectedCount);
 #endif
-        if (infectedCount > maxInfection) {
-            maxInfection = infectedCount;
-            maxInfectionId = people[i].id;
+        peopleInfectiousValue[i] = infectedCount;
+
+    }
+
+
+    unsigned short maxInfection = 0;
+    unsigned short maxInfectionId = 0;
+
+    for (int i = 0; i < numPeople; i++) {
+        if (peopleInfectiousValue[i]> maxInfection) {
+            maxInfection = peopleInfectiousValue[i];
+            maxInfectionId = peopleInitValue[i].id;
         }
     }
+
 
     printf("%d\n", maxInfectionId);
 
