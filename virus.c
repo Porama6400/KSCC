@@ -59,7 +59,6 @@ Person people[MAX_PEOPLE];
 unsigned short idTable[PEOPLE_ID_LUT_SIZE];
 unsigned short peopleInfectiousValue[MAX_PEOPLE];
 
-
 unsigned short checkNear(int sx1, int sy1, int sx2, int sy2, int px1, int py1, int px2, int py2) {
     double xsp1 = sx2 - sx1 - px2 + px1;
     double ysp1 = sy2 - sy1 - py2 + py1;
@@ -176,9 +175,7 @@ unsigned short simulate(Person localPeople[]) {
 
             if (person->status > INFECTION_LENGTH) {
                 person->status = -1;
-            }
-
-            if (person->status >= 2) {
+            } else if (person->status >= 2) {
                 // Ready to spread
 
                 for (int j = 0; j < numPeople; j++) {
@@ -247,7 +244,7 @@ void run() {
     unsigned short maxInfectionId = 0;
 
     for (int i = 0; i < numPeople; i++) {
-        if (peopleInfectiousValue[i]> maxInfection) {
+        if (peopleInfectiousValue[i] > maxInfection) {
             maxInfection = peopleInfectiousValue[i];
             maxInfectionId = peopleInitValue[i].id;
         }
