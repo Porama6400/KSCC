@@ -92,3 +92,4 @@ _deps
 
 # Exclude Linux executable
 virus
+virus.exe.stackdump
