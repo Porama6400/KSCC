@@ -15,9 +15,7 @@
 // 0 = OFF, 1 = ON
 
 #if TIME_REPORT
-
 #include <time.h>
-
 struct timespec time_start;
 unsigned long time_run;
 #endif
@@ -48,13 +46,6 @@ typedef struct {
     int dx;
     int dy;
 } Movement;
-
-typedef struct {
-    double d2;
-    double d1;
-    double d0;
-} Poly;
-
 
 // Config and Variables
 short numPeople = 0; //number of people in the simulation
