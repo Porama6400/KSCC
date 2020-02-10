@@ -14,7 +14,9 @@
 // 0 = OFF, 1 = ON
 
 #if TIME_REPORT
+
 #include <time.h>
+
 struct timespec time_start;
 unsigned long time_run;
 #endif
@@ -61,6 +63,7 @@ Movement movementTable[MAX_DAY][MAX_PEOPLE];
 PersonInit peopleInitValue[MAX_PEOPLE];
 Person people[MAX_PEOPLE];
 
+#if USE_OLD_CHECKNEAR
 unsigned short checkNear(int sx1, int sy1, int sx2, int sy2, int px1, int py1, int px2, int py2) {
     double min, max;
     double spp;
@@ -157,6 +160,35 @@ unsigned short checkNear(int sx1, int sy1, int sx2, int sy2, int px1, int py1, i
     }
 }
 
+#else
+unsigned short checkNear(int sx1, int sy1, int sx2, int sy2, int px1, int py1, int px2, int py2) {
+    double xsp1 = sx2 - sx1 - px2 + px1;
+    double ysp1 = sy2 - sy1 - py2 + py1;
+    double xsp2 = sx1 - px1;
+    double ysp2 = sy1 - py1;
+
+    double a = (xsp1 * xsp1) + (ysp1 * ysp1);
+    double b = (2 * xsp1 * xsp2) + (2 * ysp1 * ysp2);
+    double c = (xsp2 * xsp2) + (ysp2 * ysp2) - 100;
+
+    if (a == 0) return 0;
+
+    double a2 = 2 * a;
+    double bb = b * b;
+    double ac4 = a * c * 4;
+    double bb4ac = bb - ac4;
+
+    if (bb4ac <= 0) return 0;
+
+    double sqrtbb4ac = sqrt(bb4ac);
+
+    double min = (0 - b - sqrtbb4ac) / a2;
+    double max = (0 - b + sqrtbb4ac) / a2;
+
+    return max >= 0 && min <= 1;
+}
+#endif
+
 void parseInput() {
     scanf("%hu", &numPeople);
 
@@ -243,7 +275,7 @@ unsigned short simulate() {
 #if DEBUG_LEVEL >= 2
                         printf("ID=%d infected ID=%d\n", person->id, personB->id);
 #endif
-                    }
+                    } 
                 }
             }
         }
