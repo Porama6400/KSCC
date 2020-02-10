@@ -4,7 +4,7 @@
 
 #define MAX_PEOPLE 1000
 #define MAX_DAY 1000
-#define INFECTION_LENGTH 16
+#define INFECTION_LENGTH 15
 
 #define DEBUG_LEVEL 1
 // 0 = OFF, 1 = INFO, 2 = VERBOSE
@@ -212,17 +212,17 @@ unsigned short simulate() {
 
             person->toX = person->x + movementTable[day][i].dx;
             person->toY = person->y + movementTable[day][i].dy;
+
+#if DEBUG_LEVEL >= 2
+            printf("ID=%d moving from (%d,%d) to (%d,%d)\n", person->id, person->x, person->y, person->toX,
+                   person->toY);
+#endif
         }
 
 
         for (int i = 0; i < numPeople; i++) {
             Person *person = &people[i];
             if (person->status == -1) continue;
-
-#if DEBUG_LEVEL >= 2
-            printf("ID=%d moving from (%d,%d) to (%d,%d)\n", person->id, person->x, person->y, person->toX,
-                   person->toY);
-#endif
 
             if (person->status > INFECTION_LENGTH) {
                 person->status = -1;
@@ -235,7 +235,7 @@ unsigned short simulate() {
                     if (j == i) continue;
 
                     Person *personB = &people[j];
-                    if (personB->status > 0) continue;
+                    if (personB->status != 0) continue;
 
                     if (checkNear(person->x, person->y, person->toX, person->toY,
                                   personB->x, personB->y, personB->toX, personB->toY)) {
