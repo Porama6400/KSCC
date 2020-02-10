@@ -3,6 +3,7 @@
 #include <omp.h>
 
 #define MAX_PEOPLE 1000
+#define PEOPLE_ID_SIZE 10001
 #define MAX_DAY 1000
 #define INFECTION_LENGTH 15
 
@@ -62,6 +63,8 @@ short daySimulated = 0; //day of infection
 Movement movementTable[MAX_DAY][MAX_PEOPLE];
 PersonInit peopleInitValue[MAX_PEOPLE];
 Person people[MAX_PEOPLE];
+unsigned short idTable[PEOPLE_ID_SIZE];
+
 
 unsigned short checkNear(int sx1, int sy1, int sx2, int sy2, int px1, int py1, int px2, int py2) {
     double xsp1 = sx2 - sx1 - px2 + px1;
@@ -105,17 +108,32 @@ void parseInput() {
         scanf("%d", &(peopleInitValue[i].x)); //scan initial x
         scanf("%d", &(peopleInitValue[i].y)); //scan initial y
     }
+
+    for (int i = 0; i < 10001; i++) {
+        idTable[i] = 0;
+    }
+    for (int i = 0; i < numPeople; i++) {
+        idTable[peopleInitValue[i].id] = i;
+    }
+
     scanf("%hu", &daySimulated);
     for (short date = 0; date < daySimulated; date++) {
         for (short pep = 0; pep < numPeople; pep++) {
-            scanf("%hu %d %d", &(movementTable[date][pep].id), &(movementTable[date][pep].dx),
-                  &(movementTable[date][pep].dy));
+            unsigned short id;
+            int dx, dy;
+            scanf("%hu %d %d", &id, &dx, &dy);
+            Movement *movement = &movementTable[date][idTable[id]];
+            movement->id = id;
+            movement->dx = dx;
+            movement->dy = dy;
+            //scanf("%hu %d %d", &(movementTable[date][pep].id), &(movementTable[date][pep].dx),&(movementTable[date][pep].dy));
         }
     }
 
     //debug input
 #if DEBUG_LEVEL >= 1
     printf("No. of people: %hu\n", numPeople);
+    printf("No. of day: %hu\n", daySimulated);
 #endif
 #if DEBUG_LEVEL >= 2
     printf("IDs: \n");
