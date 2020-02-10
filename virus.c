@@ -2,7 +2,7 @@
 #include <math.h>
 #include <omp.h>
 
-#define MAX_PEOPLE 1000
+#define MAX_PEOPLE 5000
 #define PEOPLE_ID_SIZE 10001
 #define MAX_DAY 1000
 #define INFECTION_LENGTH 15
