@@ -219,7 +219,7 @@ unsigned short simulate(Person localPeople[]) {
     return counter;
 }
 
-void run() {
+int main() {
     parseInput();
 
 #if TIME_REPORT
@@ -261,22 +261,3 @@ void run() {
     printf("Program finished in %0.2f ms\n", time_run / 1000.0);
 #endif
 }
-
-int main() {
-    run();
-}
-
-/*#pragma omp parallel
-int main() {
-    const int iterations = 300;
-    unsigned long time_avr = 0;
-    for (int i = 0; i < iterations; i++) {
-#pragma omp single nowait
-        run();
-        time_avr += time_run;
-    }
-
-    time_avr /= iterations;
-    printf("Average: %0.2f ms\n", time_run / 1000.0);
-    return 0;
-}*/
