@@ -2,6 +2,6 @@
 :start
 cls
 gcc virus.c -fopenmp -o virus.exe
-virus.exe < virus.in
+virus.exe < testdata.txt
 pause
 goto start
