@@ -13,11 +13,8 @@
 // Benchmark time taken to calculate (not including stdin reading)
 // 0 = OFF, 1 = ON
 
-
 #if TIME_REPORT
-
 #include <time.h>
-
 struct timespec time_start;
 unsigned long time_run;
 #endif
@@ -284,20 +281,19 @@ void run() {
 
     unsigned short maxInfection = 0;
     unsigned short maxInfectionId = 0;
-#pragma omp for
+    unsigned short infectedCount = 0;
     for (int i = 0; i < numPeople; i++) {
         init();
         people[i].status = 1;
-        unsigned short infected = simulate();
-#pragma omp critical
-        if (infected > maxInfection) {
-            maxInfection = infected;
-            maxInfectionId = people[i].id;
-        }
+        infectedCount = simulate();
 
 #if DEBUG_LEVEL >= 1
-        printf("Starting with id=%d will infect %d people\n", people[i].id, infected);
+        printf("Starting with id=%d will infect %d people\n", people[i].id, infectedCount);
 #endif
+        if (infectedCount > maxInfection) {
+            maxInfection = infectedCount;
+            maxInfectionId = people[i].id;
+        }
     }
 
     printf("%d\n", maxInfectionId);
@@ -312,7 +308,7 @@ void run() {
 }
 
 int main() {
-        run();
+    run();
 }
 
 /*#pragma omp parallel
