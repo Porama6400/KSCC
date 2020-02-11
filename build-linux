@@ -1,3 +1,3 @@
 #!/bin/bash
-gcc virus.c -lm -fopenmp -o virus
+gcc virus.c -lm -fopenmp -O3 -o virus
 ./virus
